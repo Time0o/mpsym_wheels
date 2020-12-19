@@ -1,0 +1,42 @@
+name: build wheels
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build-wheels:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        include:
+        - os: ubuntu-latest
+          BUILD: "cp36-manylinux_x86_64 cp37-manylinux_x86_64 cp38-manylinux_x86_64 cp39-manylinux_x86_64"
+          ENV: "CC=gcc CXX=g++ Boost_DIR='/tmp/boost/boost_1_75_0/stage/lib/cmake'"
+          CONFIG: "{project}/configs/manylinux.sh"
+
+    env:
+      CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+      CIBW_BUILD: ${{ matrix.BUILD }}
+      CIBW_ENVIRONMENT: ${{ matrix.ENV }}
+      CIBW_BEFORE_ALL: ${{ matrix.CONFIG }}
+      CIBW_TEST_COMMAND: python -c 'import sys; import mpsym; sys.exit(mpsym.test())'
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v2
+        name: install-python
+
+      - name: install-cibuildwheel
+        run: python -m pip install cibuildwheel
+
+      - name: build-wheels
+        run: python -m cibuildwheel mpsym --output-dir wheelhouse
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
