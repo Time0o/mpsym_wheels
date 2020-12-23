@@ -9,18 +9,25 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [macos-latest] #[ubuntu-latest]
         include:
-        - os: ubuntu-latest
-          BUILD: "cp36-manylinux_x86_64 cp37-manylinux_x86_64 cp38-manylinux_x86_64 cp39-manylinux_x86_64"
-          ENV: "CC=gcc CXX=g++ Boost_DIR='/tmp/boost/boost_1_75_0/stage/lib/cmake'"
-          CONFIG: "{project}/configs/manylinux.sh"
+#        - os: ubuntu-latest
+#          BUILD: "cp36-manylinux_x86_64" # cp37-manylinux_x86_64 cp38-manylinux_x86_64 cp39-manylinux_x86_64"
+#          ENV: "CC=gcc CXX=g++ \
+#                LUA_DIR=/tmp/lua/ \
+#                Boost_DIR=/tmp/boost/boost_1_75_0/stage/lib/cmake"
+#          BEFORE_ALL: "{project}/scripts/before_all/manylinux.sh" # TODO: args
+        - os: macos-latest
+          BUILD: "cp36-macosx_x86_64"
+          ENV: "CC=clang CXX=clang++ LUA_DIR=/tmp/lua/"
+          BEFORE_ALL: "./scripts/before_all/macosx.sh 1.75.0 5.3.0"
 
     env:
-      CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+      LIBRARY_PATH: "/usr/local/opt/icu4c/lib"
+      #CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.IMAGE }} # TODO: move
       CIBW_BUILD: ${{ matrix.BUILD }}
       CIBW_ENVIRONMENT: ${{ matrix.ENV }}
-      CIBW_BEFORE_ALL: ${{ matrix.CONFIG }}
+      CIBW_BEFORE_ALL: ${{ matrix.BEFORE_ALL }}
       CIBW_TEST_COMMAND: python -c 'import sys; import mpsym; sys.exit(mpsym.test())'
 
     steps:
@@ -32,7 +39,7 @@ jobs:
         name: install-python
 
       - name: install-cibuildwheel
-        run: python -m pip install cibuildwheel
+        run: cd cibuildwheel && python -m pip install .
 
       - name: build-wheels
         run: python -m cibuildwheel mpsym --output-dir wheelhouse

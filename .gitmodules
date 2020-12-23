@@ -1,3 +1,6 @@
 [submodule "mpsym"]
 	path = mpsym
 	url = https://github.com/Time0o/mpsym
+[submodule "cibuildwheel"]
+	path = cibuildwheel
+	url = https://github.com/Time0o/cibuildwheel
